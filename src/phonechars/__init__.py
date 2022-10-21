@@ -11,6 +11,7 @@ __email__ = "tiago.tresoldi@lingfil.uu.se"
 from .common import dummy, fetch_stream_data, chars2corr
 from .copar import build_lingpy_matrix, get_copar_results
 from .ipa import ipa2xsampa
+from .nexus import corrcsv2nexus
 
 # Build the namespace
 __all__ = [

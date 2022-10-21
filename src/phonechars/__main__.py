@@ -52,6 +52,12 @@ def parse_arguments() -> dict:
         help="Path to the corr file to be generated; if not provided, it will be based on the input filename.",
     )
     parser.add_argument(
+        "-n",
+        "--nexfile",
+        type=str,
+        help="Path to the nexus file to be generated; if not provided, it will be based on the input filename.",
+    )
+    parser.add_argument(
         "-m",
         "--method",
         type=str,
@@ -162,6 +168,11 @@ def main():
     else:
         corr_file = Path(args["corrfile"])
 
+    if not args["nexfile"]:
+        nex_file = input_file.parent / f"{input_file.stem}.nex"
+    else:
+        nex_file = Path(args["nexfile"])
+
     # Dispatch to the right method for generating .chars.tsv files
     if args["method"] == "copar":
         run_copar(str(input_file), str(char_file), args["delimiter"])
@@ -170,6 +181,9 @@ def main():
 
     # Extract correspondences from a .chars.tsv file
     corr_data = extract_corrs(char_file, corr_file)
+
+    # Build the nexus file from the corr csv file
+    phonechars.corrcsv2nexus(corr_file, nex_file)
 
 
 if __name__ == "__main__":
