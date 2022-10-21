@@ -10,7 +10,10 @@ Module for command-line extraction of phylogenetic phonological characters.
 
 # Import Python standard libraries
 import argparse
+from email import charset
 import logging
+from pathlib import Path
+import csv
 
 # Import our library
 import phonechars
@@ -25,13 +28,23 @@ def parse_arguments() -> dict:
         description="Extract phonological phylogenetic characters from aligned data."
     )
     parser.add_argument(
-        "input", type=str, help="Path to the tabular file with the source data. If `-`, will read from stdin."
+        "input",
+        type=str,
+        help="Path to the tabular file with the source data. If `-`, will read from stdin.",
     )
     parser.add_argument(
-        "-d", "--delimiter", type=str,
+        "-d",
+        "--delimiter",
+        type=str,
         default="tab",
         choices=["comma", "tab"],
-        help="Delimiter used in the source file. Defaults to `tab`."
+        help="Delimiter used in the source file. Defaults to `tab`.",
+    )
+    parser.add_argument(
+        "-c",
+        "--charfile",
+        type=str,
+        help="Path to the char file to be generated; if not provided, it will be based on the input filename.",
     )
     parser.add_argument(
         "-m",
@@ -56,18 +69,37 @@ def parse_arguments() -> dict:
     return runargs
 
 
-def run_copar(args: dict):
+# TODO: decompose the full `args`, passing only the elements we need?
+def run_copar(input_file: str, char_file: str, delimiter: str):
     """
     Runs detection using the CoPAR method.
-
-    :param args: Command-line arguments for the extraction.
     """
 
-    source = phonechars.fetch_stream_data(args["input"], "utf-8")
-    D = phonechars.build_lingpy_matrix(source, args["delimiter"])
+    # Obtain char information
+    source = phonechars.fetch_stream_data(input_file, "utf-8")
+    D = phonechars.build_lingpy_matrix(source, delimiter)
     chars = phonechars.get_copar_results(D, "cogid")
 
-    print(chars[:3])
+    # Write results to disk; note that we always output TSV files
+    # TODO: drop STRUCTURE and other lingpy-only things?
+    with open(char_file, "w", encoding="utf-8") as handler:
+        writer = csv.DictWriter(
+            handler,
+            delimiter="\t",
+            fieldnames=[
+                "ID",
+                "DOCULECT",
+                "CONCEPT",
+                "IPA",
+                "TOKENS",
+                "COGID",
+                "ALIGNMENT",
+                "STRUCTURE",
+                "PATTERNS",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(chars)
 
 
 def main():
@@ -86,9 +118,17 @@ def main():
     }
     logging.basicConfig(level=level_map[args["verbosity"]])
 
+    # Build filenames as needed
+    input_file = Path(args["input"])
+
+    if not args["charfile"]:
+        char_file = input_file.parent / f"{input_file.stem}.chars.tsv"
+    else:
+        char_file = Path(args["charfile"])
+
     # Dispatch to the right method
     if args["method"] == "copar":
-        run_copar(args)
+        run_copar(str(input_file), str(char_file), args["delimiter"])
     else:
         raise ValueError(f"Invalid extraction method `{args['method']}`.")
 
