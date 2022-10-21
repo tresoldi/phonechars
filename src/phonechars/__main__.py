@@ -10,7 +10,6 @@ Module for command-line extraction of phylogenetic phonological characters.
 
 # Import Python standard libraries
 import argparse
-from email import charset
 import logging
 from pathlib import Path
 import csv
@@ -45,6 +44,12 @@ def parse_arguments() -> dict:
         "--charfile",
         type=str,
         help="Path to the char file to be generated; if not provided, it will be based on the input filename.",
+    )
+    parser.add_argument(
+        "-r",
+        "--corrfile",
+        type=str,
+        help="Path to the corr file to be generated; if not provided, it will be based on the input filename.",
     )
     parser.add_argument(
         "-m",
@@ -102,6 +107,32 @@ def run_copar(input_file: str, char_file: str, delimiter: str):
         writer.writerows(chars)
 
 
+def extract_corrs(char_file: str, corr_file: str):
+    """
+    Extract correspondence phonological characters from a .chars.tsv file.
+    """
+
+    # Log and extract base filename
+    logging.info(f"Processing `{char_file}`...")
+
+    # Read data
+    with open(char_file, encoding="utf-8") as handler:
+        char_data = list(csv.DictReader(handler, delimiter="\t"))
+
+    # Extract correspondences
+    corr_data = phonechars.chars2corr(char_data)
+
+    # Write to disk
+    with open(corr_file, "w", encoding="utf-8") as handler:
+        writer = csv.DictWriter(
+            handler, delimiter="\t", fieldnames=["DOCULECT", "CHAR", "PHONEME"]
+        )
+        writer.writeheader()
+        writer.writerows(corr_data)
+
+    return corr_data
+
+
 def main():
     """
     Main function for the `phonechars` command line too.
@@ -126,11 +157,19 @@ def main():
     else:
         char_file = Path(args["charfile"])
 
-    # Dispatch to the right method
+    if not args["corrfile"]:
+        corr_file = input_file.parent / f"{input_file.stem}.corrs.tsv"
+    else:
+        corr_file = Path(args["corrfile"])
+
+    # Dispatch to the right method for generating .chars.tsv files
     if args["method"] == "copar":
         run_copar(str(input_file), str(char_file), args["delimiter"])
     else:
         raise ValueError(f"Invalid extraction method `{args['method']}`.")
+
+    # Extract correspondences from a .chars.tsv file
+    corr_data = extract_corrs(char_file, corr_file)
 
 
 if __name__ == "__main__":
