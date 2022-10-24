@@ -25,7 +25,6 @@ def build_lingpy_matrix(
     source: str,
     delimiter: str,
     noid: bool = False,
-    noipa: bool = False,
 ) -> dict:
     """
     Read a tabular file and build a LingPy matrix from it, as expected by CoPAR.
@@ -35,10 +34,6 @@ def build_lingpy_matrix(
         sequential index. It is recommended to set to `False`, as in some cases
         lingpy and its ecosystem require purely numerical IDs. Defaults to
         `False`.
-    @param noipa: Whether to carry an "IPA" field from the source or to
-        build it using the provided segments. Note that this is not used in
-        the extraction, but it is a requirement from the lingpy ecosystem.
-        Defaults to `False`.
     @return:
     """
 
@@ -54,16 +49,20 @@ def build_lingpy_matrix(
         else:
             entry_id = int(entry["ID"])
 
-        if noipa:
-            ipa = entry[SEGMENTS_FIELD].replace(" ", "")
-        else:
-            ipa = entry["IPA"]
+        # Grab SEGMENTS and IPA if not available in the source
+        segments = entry.get(SEGMENTS_FIELD)
+        if not segments:
+            segments = entry["ALIGNMENT"].replace("-", "").strip()
+
+        ipa = entry.get("IPA")
+        if not ipa:
+            ipa = segments.replace(" ", "")
 
         wordlist[entry_id] = [
             entry["DOCULECT"],
             entry[CONCEPT_FIELD],
             ipa,
-            entry[SEGMENTS_FIELD],
+            segments,
             entry["COGID"],
             entry["ALIGNMENT"].split(),
         ]
@@ -73,6 +72,13 @@ def build_lingpy_matrix(
     cogid_count = Counter([entry[4] for _, entry in wordlist.items()])
     entries = [entry for entry in wordlist.values() if cogid_count[entry[4]] > 1]
     wordlist = {idx + 1: entry for idx, entry in enumerate(entries)}
+
+    # Remap all "cogid" fields to the index in the list of cogids (1-based), as we need
+    # to address 1. lingpy's requirement for purely numerical indexes and 2. lingrex
+    # errors when the cogid is zero
+    cogid_map = list(cogid_count.keys())
+    for row in wordlist.values():
+        row[4] = str(cogid_map.index(row[4]) + 1)
 
     # Index 0 must hold the header
     wordlist[0] = ["doculect", "concept", "ipa", "tokens", "cogid", "alignment"]
