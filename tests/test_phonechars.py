@@ -26,4 +26,15 @@ def test_copar_full():
     wordlist = phonechars.build_lingpy_matrix(source, "comma")
     chars = phonechars.get_copar_results(wordlist, "cogid")
 
-    pass
+    # Test
+    assert len(chars) == 18
+    assert (chars[0]["ID"], chars[0]["DOCULECT"], chars[0]["CONCEPT"]) == (
+        "1",
+        "LANG_A",
+        "FIRE",
+    )
+    assert (chars[13]["STRUCTURE"], chars[13]["PATTERNS"]) == (
+        "c v v c v",
+        "1-2/f 2-2/a 3-2/i 4-3/r 7-2/e",
+    )
+

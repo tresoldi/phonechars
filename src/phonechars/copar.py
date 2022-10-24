@@ -135,4 +135,7 @@ def get_copar_results(wordlist, refcol):
                         {key: value for key, value in zip(headers, tokens)}
                     )
 
+    # Sort values for reproducibility
+    new_lines = sorted(new_lines, key=lambda r: (int(r["COGID"]), int(r["ID"])))
+
     return new_lines
