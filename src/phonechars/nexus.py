@@ -1,13 +1,20 @@
-# TODO: fully review nexus: constants, etc.
+"""
+Module with functions for handling and exporting NEXUS data.
+"""
 
-import logging
-import csv
+# Import Python standard libraries
 from collections import defaultdict
+import csv
+import logging
 
 
 def parse_csv_data(data, taxa):
     """
     Prepare the NEXUS information from a list of dictionaries with the CSV data.
+
+    @param data:
+    @param taxa:
+    @return:
     """
 
     # Collect characters
@@ -21,7 +28,7 @@ def parse_csv_data(data, taxa):
 
     # Build list of character state and assumptions, including
     # adding ascertainment
-    # TODO: make ascertainment optional?
+    # TODO: make ascertainment optional? allow to have question marks?
     charstates = []
     assumptions = []
     cur_idx = 1
@@ -58,7 +65,14 @@ def parse_csv_data(data, taxa):
 
 def build_nexus_string(taxa, charstates, assumptions, all_chars, matrix):
     """
-    Build the nexus string from the parsed information.
+    Build the NEXUS string from the parsed information.
+
+    @param taxa:
+    @param charstates:
+    @param assumptions:
+    @param all_chars:
+    @param matrix:
+    @return:
     """
 
     taxon_len = max([len(taxon) for taxon in taxa])
@@ -80,32 +94,36 @@ def build_nexus_string(taxa, charstates, assumptions, all_chars, matrix):
     nexus += ";\n"
     nexus += "END;\n\n"
 
-    nexus += "begin assumptions;\n"
+    nexus += "BEGIN ASSUMPTIONS;\n"
     for assump in assumptions:
         v = all_chars[assump[0]][0].split("_")[0]
         nexus += "\tcharset %s = %i-%i;\n" % (assump[0], assump[1], assump[2])
-    nexus += "end;\n\n"
+    nexus += "END;\n\n"
 
     return nexus
 
 
-def corrcsv2nexus(corrcsv_file, nexus_file):
+# TODO: allow output to stdout?
+def corrcsv2nexus(corrtsv_file: str, nexus_file: str):
     """
     Read CSV data in the expected format and output a NEXUS file.
 
-    The function takes care of other steps such as adding
-    ascertainment.
+    The function takes care of other steps such as adding ascertainment
+    correction.
+
+    @param corrcsv_file: Path to the TSV file holding the correspondence information.
+    @param nexus_file: Path to the output NEXUS file.
     """
 
     # Log and extract base filename
-    logging.info(f"Processing `{corrcsv_file}`...")
+    logging.info(f"Processing `{corrtsv_file}`...")
 
-    # Read csv data
-    with open(corrcsv_file, encoding="utf-8") as h:
+    # Read tsv data
+    with open(corrtsv_file, encoding="utf-8") as h:
         data = list(csv.DictReader(h, delimiter="\t"))
-    taxa = sorted(set([row["DOCULECT"] for row in data]))
 
     # Get information from CSV data
+    taxa = sorted(set([row["DOCULECT"] for row in data]))
     charstates, assumptions, all_chars, matrix = parse_csv_data(data, taxa)
 
     # Build and write the NEXUS string

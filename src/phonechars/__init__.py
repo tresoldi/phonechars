@@ -8,16 +8,17 @@ __author__ = "Tiago Tresoldi"
 __email__ = "tiago.tresoldi@lingfil.uu.se"
 
 # Import from local modules
-from .common import dummy, fetch_stream_data, chars2corr
+from .common import fetch_stream_data, chars2corr
 from .copar import build_lingpy_matrix, get_copar_results
 from .ipa import ipa2xsampa
 from .nexus import corrcsv2nexus
 
 # Build the namespace
 __all__ = [
-    "dummy",
     "build_lingpy_matrix",
+    "chars2corr",
+    "corrcsv2nexus",
+    "fetch_stream_data",
     "get_copar_results",
     "ipa2xsampa",
-    "chars2corr",
 ]

@@ -4,11 +4,11 @@ This is including methods that cannon be easily converted to JavaScript.
 """
 
 # Import Python standard libraries
+from collections import defaultdict
 import contextlib
 import logging
 import sys
 import typing
-from collections import defaultdict
 
 # Import 3rd party libraries
 import chardet
@@ -24,7 +24,9 @@ def smart_open(
 ) -> typing.IO:
     """
     Open files and i/o streams transparently.
+
     Code originally from https://stackoverflow.com/a/45735618.
+
     @param filename: The full path to the file to be opened; if "-",
         it will open `sys.stdin` when in reading mode and `sys.stdout`
         when in writing mode.
@@ -66,9 +68,11 @@ def smart_open(
 def fetch_stream_data(input_source: str, encoding: str = "auto") -> str:
     """
     Read the input data as a string.
+
     The function takes care of handling input from both stdin and
     files, decoding the stream of bytes according to the user-specified
     character encoding (including automatic detection if necessary).
+
     @param input_source: The input source file; "-", as handled by
         `smart_open()`, indicates stdin/stdout.
     @param encoding: The encoding for the stream of data, with "auto"
@@ -100,19 +104,22 @@ def fetch_stream_data(input_source: str, encoding: str = "auto") -> str:
     return source
 
 
-def slug_phoneme_label(label):
+def slug_grapheme_label(grapheme: str) -> str:
     """
-    Return a NEXUS compatible label.
+    Return a NEXUS compatible label for a grapheme.
+
+    @param grapheme: The IPA grapheme to be slugged.
+    @return: A slugged version of the grapheme.
     """
 
     # Convert to XSAMPA and run unidecode for pure ASCII
-    slug_label = ipa.ipa2xsampa(label, None)
+    slug_label = ipa.ipa2xsampa(grapheme, None)
     slug_label = unidecode.unidecode(slug_label)
 
     # Annotate tones, so they are easy to spot and the label
     # does not start with a number
     if slug_label[0] in "0123456":
-        slug_label = "TONE_" + slug_label
+        slug_label = f"TONE_{slug_label}"
 
     # Run a bunch of replacements for ASCII characters not accepted
     # by some of the tools (e.g., SplitsTree); we still try to
@@ -134,6 +141,9 @@ def slug_phoneme_label(label):
 def chars2corr(char_data):
     """
     Builds a correspondence data structure from a chars one.
+
+    @param char_data:
+    @return:
     """
 
     # Collect character values for each correspodence pattern
@@ -155,16 +165,17 @@ def chars2corr(char_data):
     doculects = sorted(set([doculect for doculect, _ in list(lang_obs)]))
     data = []
     for pattern, values in pat_values.items():
-        if len(set(values)) > 1:  # TODO: need for len?
+        if set(values):
             for doculect in doculects:
                 phonemes = lang_obs.get((doculect, pattern), None)
                 if phonemes:
-                    # Adapt lingpy notation to NEXUS
+                    # Adapt lingpy's notation to NEXUS
                     if phonemes[0] == "-":
                         ref_phon = "ZERO"
                     else:
-                        # TODO: should take the second part (in lingpy notation)?
-                        ref_phon = slug_phoneme_label(phonemes[0].split("/")[0])
+                        # Note that lingpy might have a secondary notation, a broader grapheme specified after a
+                        # slash, but we are here taking the original form.
+                        ref_phon = slug_grapheme_label(phonemes[0].split("/")[0])
 
                     data.append(
                         {
@@ -174,11 +185,7 @@ def chars2corr(char_data):
                         }
                     )
 
+    # Sort the data and return
     corr_data = sorted(data, key=lambda r: (r["CHAR"], r["DOCULECT"]))
 
     return corr_data
-
-
-################################3
-def dummy():
-    return 13
