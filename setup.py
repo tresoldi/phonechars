@@ -32,7 +32,7 @@ setup(
     description="Extract phonological phylogenetic characters from aligned data",
     entry_points={"console_scripts": ["phonechars=phonechars.__main__:main"]},
     extras_require={
-        "dev": ["black", "flake8", "twine", "wheel"],
+        "dev": ["black", "flake8", "twine", "wheel", "build"],
         "test": ["pytest"],
     },
     include_package_data=True,
