@@ -6,7 +6,8 @@ Tests for the `phonechars` package.
 """
 
 # Import Python standard libraries
-import pytest
+from multiprocessing.context import assert_spawning
+import hashlib
 from pathlib import Path
 
 # Import the library being tested
@@ -39,7 +40,6 @@ def test_copar_full():
     )
 
     # Test correspondence extraction
-    # Extract correspondences
     corr_data = phonechars.chars2corr(char_data)
     assert len(corr_data) == 41
     assert (
@@ -52,3 +52,14 @@ def test_copar_full():
         corr_data[40]["CHAR"],
         corr_data[40]["PHONEME"],
     ) == ("LANG_D", "c9_1", "!y")
+
+    # Test NEXUS generation
+    # TODO: better test for nexus output?
+    nexus_source = phonechars.corrdata2nexus(corr_data)
+    assert len(nexus_source) == 1016
+    m = hashlib.sha256()
+    m.update(nexus_source.encode("utf-8"))
+    assert (
+        m.hexdigest()
+        == "b4364c18ebe91f4eae01d024cf9dfa50132b3853bd7aa451ee3bab64db3b9c87"
+    )
