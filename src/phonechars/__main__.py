@@ -94,7 +94,7 @@ def run_copar(input_file: str, delimiter: str):
     return chars
 
 
-def extract_corrs(char_file: str, corr_file: str):
+def obtain_corrs(char_file: str, corr_file: str):
     """
     Extract correspondence phonological characters from a .chars.tsv file.
     """
@@ -181,10 +181,12 @@ def main():
         raise ValueError(f"Invalid extraction method `{args['method']}`.")
 
     # Extract correspondences from a .chars.tsv file
-    corr_data = extract_corrs(char_file, corr_file)
+    corr_data = obtain_corrs(char_file, corr_file)
 
     # Build the nexus file from the corr csv file
-    phonechars.corrcsv2nexus(corr_file, nex_file)
+    nexus_source = phonechars.corrdata2nexus(corr_data)
+    with open(nex_file, "w", encoding="utf-8") as handler:
+        handler.write(nexus_source)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import csv
 import logging
 
 
-def parse_csv_data(data, taxa):
+def parse_corr_data(data, taxa):
     """
     Prepare the NEXUS information from a list of dictionaries with the CSV data.
 
@@ -104,29 +104,22 @@ def build_nexus_string(taxa, charstates, assumptions, all_chars, matrix):
 
 
 # TODO: allow output to stdout?
-def corrcsv2nexus(corrtsv_file: str, nexus_file: str):
+def corrdata2nexus(corr_data):
     """
     Read CSV data in the expected format and output a NEXUS file.
 
     The function takes care of other steps such as adding ascertainment
     correction.
 
-    @param corrcsv_file: Path to the TSV file holding the correspondence information.
-    @param nexus_file: Path to the output NEXUS file.
+    @param corr_data:
+    @return: The full NEXUS representation for the data.
     """
 
-    # Log and extract base filename
-    logging.info(f"Processing `{corrtsv_file}`...")
+    # Get information from correlation data data
+    taxa = sorted(set([row["DOCULECT"] for row in corr_data]))
+    charstates, assumptions, all_chars, matrix = parse_corr_data(corr_data, taxa)
 
-    # Read tsv data
-    with open(corrtsv_file, encoding="utf-8") as h:
-        data = list(csv.DictReader(h, delimiter="\t"))
-
-    # Get information from CSV data
-    taxa = sorted(set([row["DOCULECT"] for row in data]))
-    charstates, assumptions, all_chars, matrix = parse_csv_data(data, taxa)
-
-    # Build and write the NEXUS string
+    # Build and return the NEXUS string
     nexus = build_nexus_string(taxa, charstates, assumptions, all_chars, matrix)
-    with open(nexus_file, "w", encoding="utf-8") as handler:
-        handler.write(nexus)
+
+    return nexus

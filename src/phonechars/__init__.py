@@ -11,13 +11,13 @@ __email__ = "tiago.tresoldi@lingfil.uu.se"
 from .common import fetch_stream_data, chars2corr
 from .copar import build_lingpy_matrix, get_copar_results
 from .ipa import ipa2xsampa
-from .nexus import corrcsv2nexus
+from .nexus import corrdata2nexus
 
 # Build the namespace
 __all__ = [
     "build_lingpy_matrix",
     "chars2corr",
-    "corrcsv2nexus",
+    "corrdata2nexus",
     "fetch_stream_data",
     "get_copar_results",
     "ipa2xsampa",
