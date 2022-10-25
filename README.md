@@ -23,7 +23,7 @@ will generate three files with related information:
 
   - A `.chars.tsv` file, extending the alignment information with correspondences
     inferred by means of different methods (currently, only a method modified from
-    List (2019) and available via the `lingrex` library is available)
+    List (2019) and available via the `lingrex` library is offered)
   - A `.corrs.tsv` file, informing the detected correspondences
   - A `.nex` (NEXUS) file, suitable for analysis with standard phylogenetic tools
     including SplitsTree and BEAST2
